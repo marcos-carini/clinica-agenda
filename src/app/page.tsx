@@ -1,5 +1,9 @@
-const Home = () => {
-  return <div className="flex items-center text-red-500">Home</div>;
-};
+import { Button } from "@/components/ui/button";
 
-export default Home;
+export default function Home() {
+  return (
+    <div>
+      <Button>Click me!</Button>
+    </div>
+  );
+}
