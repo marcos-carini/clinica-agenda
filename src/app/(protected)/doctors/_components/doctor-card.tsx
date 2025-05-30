@@ -31,7 +31,8 @@ const DoctorCard = ({ doctor }: DoctorCardProps) => {
     .join("");
   const availability = getAvailability(doctor);
 
-  const [isOpen, setIsOpen] = useState(false);
+  const [isUpsertDoctorDialogOpen, setIsUpsertDoctorDialogOpen] =
+    useState(false);
 
   return (
     <Card>
@@ -64,11 +65,21 @@ const DoctorCard = ({ doctor }: DoctorCardProps) => {
       </CardContent>
       <Separator />
       <CardFooter>
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <Dialog
+          open={isUpsertDoctorDialogOpen}
+          onOpenChange={setIsUpsertDoctorDialogOpen}
+        >
           <DialogTrigger asChild>
             <Button className="w-full">Ver detalhes</Button>
           </DialogTrigger>
-          <UpsertDoctorForm onSuccess={() => setIsOpen(false)} />
+          <UpsertDoctorForm
+            onSuccess={() => setIsUpsertDoctorDialogOpen(false)}
+            doctor={{
+              ...doctor,
+              availableToTime: availability.to.format("HH:mm:ss"),
+              availableFromTime: availability.from.format("HH:mm:ss"),
+            }}
+          />
         </Dialog>
       </CardFooter>
     </Card>
