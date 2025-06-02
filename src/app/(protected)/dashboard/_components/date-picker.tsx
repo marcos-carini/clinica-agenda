@@ -3,7 +3,7 @@
 import { addMonths, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Calendar as CalendarIcon } from "lucide-react";
-import { parseAsIsoDate, useQueryState } from "nuqs";
+import { createParser, useQueryState } from "nuqs";
 import * as React from "react";
 import { DateRange } from "react-day-picker";
 
@@ -16,17 +16,31 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
+// Cria um parser customizado para datas
+const dateParser = createParser({
+  parse: (value: string) => {
+    // Garante que a data seja interpretada como UTC à meia-noite
+    const date = new Date(value + "T12:00:00Z");
+    return isNaN(date.getTime()) ? null : date;
+  },
+  serialize: (date: Date) => {
+    // Serializa apenas a data em formato YYYY-MM-DD
+    return date.toISOString().split("T")[0];
+  },
+});
+
 export function DatePicker({
   className,
 }: React.HTMLAttributes<HTMLDivElement>) {
   const [from, setFrom] = useQueryState(
     "from",
-    parseAsIsoDate.withDefault(new Date()),
+    dateParser.withDefault(new Date()),
   );
   const [to, setTo] = useQueryState(
     "to",
-    parseAsIsoDate.withDefault(addMonths(new Date(), 1)),
+    dateParser.withDefault(addMonths(new Date(), 1)),
   );
+
   const handleDateSelect = (dateRange: DateRange | undefined) => {
     if (dateRange?.from) {
       setFrom(dateRange.from, {
@@ -39,10 +53,12 @@ export function DatePicker({
       });
     }
   };
+
   const date = {
     from,
     to,
   };
+
   return (
     <div className={cn("grid gap-2", className)}>
       <Popover>
