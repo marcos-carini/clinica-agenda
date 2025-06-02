@@ -3,7 +3,11 @@
 import "dayjs/locale/pt-br";
 
 import dayjs from "dayjs";
+import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc";
 
+dayjs.extend(utc);
+dayjs.extend(timezone);
 dayjs.locale("pt-br");
 import { DollarSign } from "lucide-react";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
@@ -38,7 +42,11 @@ const AppointmentsChart = ({
   );
 
   const chartData = chartDays.map((date) => {
-    const dataForDay = dailyAppointmentsData.find((item) => item.date === date);
+    // Converter a data do banco (UTC) para local antes de comparar
+    const dataForDay = dailyAppointmentsData.find(
+      (item) => dayjs(item.date).local().format("YYYY-MM-DD") === date,
+    );
+
     return {
       date: dayjs(date).format("DD/MM"),
       fullDate: date,

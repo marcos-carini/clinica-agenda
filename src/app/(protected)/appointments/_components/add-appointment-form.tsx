@@ -155,10 +155,26 @@ const AddAppointmentForm = ({
       (doctor) => doctor.id === selectedDoctorId,
     );
     if (!selectedDoctor) return false;
-    const dayOfWeek = date.getDay();
+
+    const dateToCheck = dayjs(date);
+    const now = dayjs();
+    const dayOfWeek = dateToCheck.day();
+
+    // Se for um dia anterior, bloqueia
+    if (dateToCheck.isBefore(now, "day")) return false;
+
+    // Se for hoje, verifica se o médico atende neste dia
+    if (dateToCheck.isSame(now, "day")) {
+      return (
+        dayOfWeek >= selectedDoctor.availableFromWeekDay &&
+        dayOfWeek <= selectedDoctor.availableToWeekDay
+      );
+    }
+
+    // Se for um dia futuro, verifica se o médico atende neste dia
     return (
-      dayOfWeek >= selectedDoctor?.availableFromWeekDay &&
-      dayOfWeek <= selectedDoctor?.availableToWeekDay
+      dayOfWeek >= selectedDoctor.availableFromWeekDay &&
+      dayOfWeek <= selectedDoctor.availableToWeekDay
     );
   };
 
@@ -286,9 +302,7 @@ const AddAppointmentForm = ({
                       mode="single"
                       selected={field.value}
                       onSelect={field.onChange}
-                      disabled={(date) =>
-                        date < new Date() || !isDateAvailable(date)
-                      }
+                      disabled={(date) => !isDateAvailable(date)}
                       initialFocus
                     />
                   </PopoverContent>

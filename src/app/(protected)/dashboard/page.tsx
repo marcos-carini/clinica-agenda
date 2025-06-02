@@ -1,4 +1,6 @@
 import dayjs from "dayjs";
+import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc";
 import { desc, eq, lte, sql } from "drizzle-orm";
 import { gte } from "drizzle-orm";
 import { count } from "drizzle-orm";
@@ -29,6 +31,9 @@ import { DatePicker } from "./_components/date-picker";
 import StatsCards from "./_components/stats-card";
 import TopDoctors from "./_components/top-doctors";
 import TopSpecialties from "./_components/top-specialties";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 interface DashboardPageProps {
   searchParams: Promise<{
@@ -73,8 +78,8 @@ const DashboardPage = async ({ searchParams }: DashboardPageProps) => {
       .where(
         and(
           eq(appointmentsTable.clinicId, session.user.clinic.id),
-          gte(appointmentsTable.date, new Date(from)),
-          lte(appointmentsTable.date, new Date(to)),
+          sql`DATE(${appointmentsTable.date} AT TIME ZONE 'UTC' AT TIME ZONE 'America/Sao_Paulo') >= DATE(${from})`,
+          sql`DATE(${appointmentsTable.date} AT TIME ZONE 'UTC' AT TIME ZONE 'America/Sao_Paulo') <= DATE(${to})`,
         ),
       ),
     db
@@ -85,8 +90,8 @@ const DashboardPage = async ({ searchParams }: DashboardPageProps) => {
       .where(
         and(
           eq(appointmentsTable.clinicId, session.user.clinic.id),
-          gte(appointmentsTable.date, new Date(from)),
-          lte(appointmentsTable.date, new Date(to)),
+          sql`DATE(${appointmentsTable.date} AT TIME ZONE 'UTC' AT TIME ZONE 'America/Sao_Paulo') >= DATE(${from})`,
+          sql`DATE(${appointmentsTable.date} AT TIME ZONE 'UTC' AT TIME ZONE 'America/Sao_Paulo') <= DATE(${to})`,
         ),
       ),
     db
@@ -114,8 +119,8 @@ const DashboardPage = async ({ searchParams }: DashboardPageProps) => {
         appointmentsTable,
         and(
           eq(appointmentsTable.doctorId, doctorsTable.id),
-          gte(appointmentsTable.date, new Date(from)),
-          lte(appointmentsTable.date, new Date(to)),
+          sql`DATE(${appointmentsTable.date} AT TIME ZONE 'UTC' AT TIME ZONE 'America/Sao_Paulo') >= DATE(${from})`,
+          sql`DATE(${appointmentsTable.date} AT TIME ZONE 'UTC' AT TIME ZONE 'America/Sao_Paulo') <= DATE(${to})`,
         ),
       )
       .where(eq(doctorsTable.clinicId, session.user.clinic.id))
@@ -132,8 +137,8 @@ const DashboardPage = async ({ searchParams }: DashboardPageProps) => {
       .where(
         and(
           eq(appointmentsTable.clinicId, session.user.clinic.id),
-          gte(appointmentsTable.date, new Date(from)),
-          lte(appointmentsTable.date, new Date(to)),
+          sql`DATE(${appointmentsTable.date} AT TIME ZONE 'UTC' AT TIME ZONE 'America/Sao_Paulo') >= DATE(${from})`,
+          sql`DATE(${appointmentsTable.date} AT TIME ZONE 'UTC' AT TIME ZONE 'America/Sao_Paulo') <= DATE(${to})`,
         ),
       )
       .groupBy(doctorsTable.specialty)
@@ -141,8 +146,14 @@ const DashboardPage = async ({ searchParams }: DashboardPageProps) => {
     db.query.appointmentsTable.findMany({
       where: and(
         eq(appointmentsTable.clinicId, session.user.clinic.id),
-        gte(appointmentsTable.date, new Date()),
-        lte(appointmentsTable.date, new Date()),
+        gte(
+          appointmentsTable.date,
+          new Date(dayjs().startOf("day").utc().format("YYYY-MM-DD HH:mm:ss")),
+        ),
+        lte(
+          appointmentsTable.date,
+          new Date(dayjs().endOf("day").utc().format("YYYY-MM-DD HH:mm:ss")),
+        ),
       ),
       with: {
         patient: true,
@@ -156,7 +167,9 @@ const DashboardPage = async ({ searchParams }: DashboardPageProps) => {
 
   const dailyAppointmentsData = await db
     .select({
-      date: sql<string>`DATE(${appointmentsTable.date})`.as("date"),
+      date: sql<string>`DATE(${appointmentsTable.date} AT TIME ZONE 'UTC' AT TIME ZONE 'America/Sao_Paulo')`.as(
+        "date",
+      ),
       appointments: count(appointmentsTable.id),
       revenue:
         sql<number>`COALESCE(SUM(${appointmentsTable.appointmentPriceInCents}), 0)`.as(
@@ -171,8 +184,12 @@ const DashboardPage = async ({ searchParams }: DashboardPageProps) => {
         lte(appointmentsTable.date, chartEndDate),
       ),
     )
-    .groupBy(sql`DATE(${appointmentsTable.date})`)
-    .orderBy(sql`DATE(${appointmentsTable.date})`);
+    .groupBy(
+      sql`DATE(${appointmentsTable.date} AT TIME ZONE 'UTC' AT TIME ZONE 'America/Sao_Paulo')`,
+    )
+    .orderBy(
+      sql`DATE(${appointmentsTable.date} AT TIME ZONE 'UTC' AT TIME ZONE 'America/Sao_Paulo')`,
+    );
 
   return (
     <PageContainer>
