@@ -9,17 +9,20 @@ import { createStripeCheckout } from "@/actions/create-stripe-checkout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { authClient } from "@/lib/auth-client";
 
 interface SubscriptionPlanProps {
   active?: boolean;
   className?: string;
   userEmail: string;
+  newUser?: boolean;
 }
 
 export function SubscriptionPlan({
   active = false,
   className,
   userEmail,
+  newUser = false,
 }: SubscriptionPlanProps) {
   const router = useRouter();
   const createStripeCheckoutAction = useAction(createStripeCheckout, {
@@ -58,6 +61,16 @@ export function SubscriptionPlan({
     "Confirmação manual",
     "Suporte via e-mail",
   ];
+
+  const handleSignOut = async () => {
+    await authClient.signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          router.push("/authentication");
+        },
+      },
+    });
+  };
 
   return (
     <Card className={className}>
@@ -107,6 +120,17 @@ export function SubscriptionPlan({
             )}
           </Button>
         </div>
+        {newUser && (
+          <div className="mt-4">
+            <Button
+              variant="link"
+              className="w-full text-gray-500 hover:text-gray-700"
+              onClick={handleSignOut}
+            >
+              Assinar em outro e-mail
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
