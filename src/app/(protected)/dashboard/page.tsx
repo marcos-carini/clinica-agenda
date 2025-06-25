@@ -37,7 +37,19 @@ interface DashboardPageProps {
   }>;
 }
 
-const DashboardPage = async ({ searchParams }: DashboardPageProps) => {
+export default function DashboardPage({ searchParams }: DashboardPageProps) {
+  return (
+    <WithAuthentication mustHaveClinic>
+      <DashboardContent searchParams={searchParams} />
+    </WithAuthentication>
+  );
+}
+
+async function DashboardContent({
+  searchParams,
+}: {
+  searchParams: Promise<{ from: string; to: string }>;
+}) {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
@@ -71,55 +83,49 @@ const DashboardPage = async ({ searchParams }: DashboardPageProps) => {
   });
 
   return (
-    <WithAuthentication mustHaveClinic>
-      <PageContainer>
-        <PageHeader>
-          <PageHeaderContent>
-            <PageTitle>Dashboard</PageTitle>
-            <PageDescription>
-              Tenha uma visão geral da sua clínica
-            </PageDescription>
-          </PageHeaderContent>
-          <PageActions>
-            <DatePicker />
-          </PageActions>
-        </PageHeader>
-        <PageContent>
-          <StatsCards
-            totalRevenue={
-              totalRevenue.total ? Number(totalRevenue.total) : null
-            }
-            totalAppointments={totalAppointments.total}
-            totalPatients={totalPatients.total}
-            totalDoctors={totalDoctors.total}
-          />
-          <div className="grid grid-cols-[2.25fr_1fr] gap-4">
-            <AppointmentsChart dailyAppointmentsData={dailyAppointmentsData} />
-            <TopDoctors doctors={topDoctors} />
-          </div>
-          <div className="grid grid-cols-[2.25fr_1fr] gap-4">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <Calendar className="text-muted-foreground" />
-                  <CardTitle className="text-base">
-                    Agendamentos de hoje
-                  </CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <DataTable
-                  columns={appointmentsTableColumns}
-                  data={todayAppointments}
-                />
-              </CardContent>
-            </Card>
-            <TopSpecialties topSpecialties={topSpecialties} />
-          </div>
-        </PageContent>
-      </PageContainer>
-    </WithAuthentication>
+    <PageContainer>
+      <PageHeader>
+        <PageHeaderContent>
+          <PageTitle>Dashboard</PageTitle>
+          <PageDescription>
+            Tenha uma visão geral da sua clínica
+          </PageDescription>
+        </PageHeaderContent>
+        <PageActions>
+          <DatePicker />
+        </PageActions>
+      </PageHeader>
+      <PageContent>
+        <StatsCards
+          totalRevenue={totalRevenue.total ? Number(totalRevenue.total) : null}
+          totalAppointments={totalAppointments.total}
+          totalPatients={totalPatients.total}
+          totalDoctors={totalDoctors.total}
+        />
+        <div className="grid grid-cols-[2.25fr_1fr] gap-4">
+          <AppointmentsChart dailyAppointmentsData={dailyAppointmentsData} />
+          <TopDoctors doctors={topDoctors} />
+        </div>
+        <div className="grid grid-cols-[2.25fr_1fr] gap-4">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <Calendar className="text-muted-foreground" />
+                <CardTitle className="text-base">
+                  Agendamentos de hoje
+                </CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <DataTable
+                columns={appointmentsTableColumns}
+                data={todayAppointments}
+              />
+            </CardContent>
+          </Card>
+          <TopSpecialties topSpecialties={topSpecialties} />
+        </div>
+      </PageContent>
+    </PageContainer>
   );
-};
-
-export default DashboardPage;
+}
